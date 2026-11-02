@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { formatEventDate } from "@/lib/event-format";
 
-function slugify(value: string) { return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""); }
-
 export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
   if (!process.env.DATABASE_URL) return NextResponse.json({ error: "Public events are not configured." }, { status: 503 });
   const { slug } = await params;
@@ -31,9 +29,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
      JOIN users u ON u.id = e.organizer_id
      LEFT JOIN event_ticket_types t ON t.event_id = e.id
      WHERE e.status = 'published'
+       AND LOWER(REGEXP_REPLACE(
+         REGEXP_REPLACE(TRIM(e.name), '[^a-zA-Z0-9]+', '-', 'g'),
+         '(^-|-$)', '', 'g'
+       )) = LOWER($1)
      GROUP BY e.id, u.full_name`,
+    [slug],
   );
-  const event = result.rows.find((row) => slugify(row.name) === slug);
+  const event = result.rows[0];
   if (!event) return NextResponse.json({ event: null });
   return NextResponse.json({
     event: {
@@ -50,6 +53,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
       hero: event.image_url,
       photos: event.image_url ? [event.image_url] : [],
       tickets: event.tickets,
+    },
+  }, {
+    headers: {
+      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
     },
   });
 }

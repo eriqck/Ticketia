@@ -33,6 +33,21 @@ export default function EventPage() {
   const organizerReceives = total - platformFee - processingFee;
 
   useEffect(() => {
+    const cacheKey = `ticketia:event:${params.slug}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const result = JSON.parse(cached) as { event?: EventDetail & { imageUrl?: string } | null };
+        if (result.event) {
+          const nextEvent = { ...result.event, hero: result.event.hero || result.event.imageUrl || fallbackEvent.hero, photos: result.event.photos ?? [] };
+          setEventData(nextEvent);
+          setSelectedTicket(nextEvent.tickets[0]);
+          setUploadedHero(result.event.imageUrl ?? "");
+        }
+      } catch {
+        sessionStorage.removeItem(cacheKey);
+      }
+    }
     fetch(`/api/public-events/${params.slug}`).then(async (response) => {
       const result = await response.json() as { event?: EventDetail & { imageUrl?: string } | null };
       if (!response.ok || !result.event) throw new Error("Event unavailable.");
@@ -40,6 +55,7 @@ export default function EventPage() {
       setEventData(nextEvent);
       setSelectedTicket(nextEvent.tickets[0]);
       setUploadedHero(result.event.imageUrl ?? "");
+      sessionStorage.setItem(cacheKey, JSON.stringify(result));
     }).catch(() => undefined);
   }, [params.slug, fallbackEvent.hero]);
 
