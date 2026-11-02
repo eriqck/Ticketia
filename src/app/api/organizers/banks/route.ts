@@ -10,5 +10,6 @@ export async function GET() {
   });
   const payload = (await response.json()) as { status?: boolean; message?: string; data?: Array<{ name: string; code: string }> };
   if (!response.ok || !payload.status) return NextResponse.json({ error: payload.message ?? "Unable to load Kenyan banks." }, { status: 502 });
-  return NextResponse.json({ banks: payload.data ?? [] });
+  const banks = Array.from(new Map((payload.data ?? []).map((bank) => [`${bank.code}:${bank.name}`, bank])).values());
+  return NextResponse.json({ banks });
 }
