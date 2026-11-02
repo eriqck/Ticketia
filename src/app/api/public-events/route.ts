@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { formatEventDate } from "@/lib/event-format";
 
 function slugify(value: string) { return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""); }
 
@@ -27,7 +28,7 @@ export async function GET() {
     events: result.rows.map((event) => ({
       title: event.name,
       slug: slugify(event.name),
-      date: new Date(`${event.event_date}T00:00:00`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long", year: "numeric" }),
+      date: formatEventDate(event.event_date),
       time: event.start_time.slice(0, 5),
       location: event.venue,
       category: event.category ?? "Events",

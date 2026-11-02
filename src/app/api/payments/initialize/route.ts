@@ -50,6 +50,12 @@ export async function POST(request: Request) {
       { status: 404 },
     );
   }
+  if (!eventTicket.paystack_subaccount_code || eventTicket.payout_status !== "connected") {
+    return NextResponse.json(
+      { error: "This organizer has not connected a payout account yet." },
+      { status: 409 },
+    );
+  }
 
   const remaining = eventTicket.ticket_quantity - eventTicket.tickets_sold;
   if (quantity > remaining) return NextResponse.json({ error: "Not enough tickets remain for this ticket type." }, { status: 409 });

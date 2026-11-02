@@ -31,7 +31,8 @@ export async function findEventTicket(slug: string, ticketName: string) {
     ticket_price_kes: number;
     ticket_quantity: number;
     tickets_sold: number;
-    paystack_subaccount_code: string;
+    paystack_subaccount_code: string | null;
+    payout_status: string | null;
   }>(
     `SELECT e.id AS event_id,
      e.name AS event_name,
@@ -46,18 +47,18 @@ export async function findEventTicket(slug: string, ticketName: string) {
          AND ord.ticket_type = t.name
          AND tk.status <> 'void'
      ), 0)::int AS tickets_sold,
-     o.paystack_subaccount_code
+     o.paystack_subaccount_code,
+     o.payout_status
      FROM events e
      JOIN event_ticket_types t ON t.event_id = e.id
      JOIN users u ON u.id = e.organizer_id
-     JOIN organizers o ON LOWER(o.email) = LOWER(u.email)
+     LEFT JOIN organizers o ON LOWER(o.email) = LOWER(u.email)
      WHERE e.status = 'published'
        AND LOWER(REGEXP_REPLACE(
          REGEXP_REPLACE(TRIM(e.name), '[^a-zA-Z0-9]+', '-', 'g'),
          '(^-|-$)', '', 'g'
        )) = LOWER($1)
        AND LOWER(t.name) = LOWER($2)
-       AND o.payout_status = 'connected'
      LIMIT 1`,
     [slug, ticketName],
   );
