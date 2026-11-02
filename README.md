@@ -4,7 +4,7 @@ Kenya-first event commerce with Paystack checkout and organizer subaccount payou
 
 ## Getting Started
 
-Copy `.env.example` to `.env.local`, set your Paystack secret key from the Paystack Dashboard, `DATABASE_URL`, `SCANNER_SNAPSHOT_KEY`, and an Ed25519 `TICKET_SIGNING_PRIVATE_KEY`/`TICKET_SIGNING_PUBLIC_KEY` pair. Do not commit `.env.local` or share the secret key. Apply the PostgreSQL migrations in `db/migrations/` before enabling database-backed payouts and offline ticket verification. Organizer subaccount codes are created by `/organizer` and persisted in PostgreSQL; they are not configured as a global demo value.
+Copy `.env.example` to `.env.local`, set your Paystack secret key from the Paystack Dashboard, `DATABASE_URL`, `SCANNER_SNAPSHOT_KEY`, an Ed25519 `TICKET_SIGNING_PRIVATE_KEY`/`TICKET_SIGNING_PUBLIC_KEY` pair, and the Supabase Storage values. Create a public `event-media` bucket (or use the bucket named by `SUPABASE_STORAGE_BUCKET`) in Supabase Storage. Do not commit `.env.local` or share server-only secrets such as the Supabase service-role key. Apply the PostgreSQL migrations in `db/migrations/` before enabling database-backed payouts and offline ticket verification. Organizer subaccount codes are created by `/organizer` and persisted in PostgreSQL; they are not configured as a global demo value.
 
 Start the development server:
 
