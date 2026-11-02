@@ -2,6 +2,7 @@
 
 import { type FormEvent, useEffect, useState } from "react";
 import { createPaymentQuote } from "@/lib/payments";
+import { eventCategories } from "@/lib/event-categories";
 
 type EventItem = {
   title: string;
@@ -29,7 +30,6 @@ const events: EventItem[] = [
   { title: "Nairobi City Run", date: "Sunday, 25 October 2026", time: "6:30 am - 11:00 am", location: "Uhuru Park, Nairobi", category: "Sports", price: "KSh 500", amount: 500, image: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1000&q=85" },
 ];
 
-const categories = ["All events", "Music", "Business", "Sports", "Comedy", "Food", "Workshops"];
 const ticketOptions: TicketOption[] = [
   { name: "Early Bird", description: "First release · limited quantity", amount: 1000, price: "KSh 1,000", remaining: 24 },
   { name: "Regular", description: "General admission", amount: 1500, price: "KSh 1,500", remaining: 86 },
@@ -57,6 +57,7 @@ export default function Home() {
   const [featuredIndex, setFeaturedIndex] = useState(0);
 
   const normalizedSearch = searchQuery.trim().toLowerCase();
+  const categories = ["All events", ...eventCategories];
   const filteredEvents = eventCatalog.filter((event) => {
     const matchesCategory = activeCategory === "All events" || event.category === activeCategory;
     const matchesSearch = !normalizedSearch || [event.title, event.category, event.location, event.date].some((value) => value.toLowerCase().includes(normalizedSearch));

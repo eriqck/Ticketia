@@ -15,7 +15,7 @@ export async function GET() {
     min_price: number | null;
   }>(
     `SELECT e.name, e.event_date, e.start_time, e.venue, e.image_url,
-      NULL::text AS category, MIN(t.price_kes)::int AS min_price
+      e.category, MIN(t.price_kes)::int AS min_price
      FROM events e
      LEFT JOIN event_ticket_types t ON t.event_id = e.id
      WHERE e.status = 'published'

@@ -14,10 +14,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     start_time: string;
     venue: string;
     image_url: string | null;
+    category: string;
     organizer_name: string;
     tickets: Array<{ name: string; amount: number; description: string; quantity: number }>;
   }>(
-    `SELECT e.id, e.name, e.description, e.event_date, e.start_time, e.venue, e.image_url,
+    `SELECT e.id, e.name, e.description, e.event_date, e.start_time, e.venue, e.category, e.image_url,
       u.full_name AS organizer_name,
       COALESCE(json_agg(json_build_object(
         'name', t.name,
@@ -38,7 +39,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
       id: event.id,
       slug,
       title: event.name,
-      category: "Events",
+      category: event.category,
       description: event.description,
       date: new Date(`${event.event_date}T00:00:00`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }),
       time: event.start_time.slice(0, 5),

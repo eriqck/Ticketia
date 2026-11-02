@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
+import { eventCategories } from "@/lib/event-categories";
 
 type TicketInput = { name?: string; price?: number; quantity?: number };
 
@@ -28,18 +29,18 @@ export async function GET() {
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user || user.account_type !== "organizer") return NextResponse.json({ error: "Organizer sign-in required." }, { status: 401 });
-  let body: { name?: string; description?: string; date?: string; time?: string; venue?: string; imageUrl?: string; tickets?: TicketInput[] };
+  let body: { name?: string; description?: string; date?: string; time?: string; venue?: string; category?: string; imageUrl?: string; tickets?: TicketInput[] };
   try { body = (await request.json()) as typeof body; } catch { return NextResponse.json({ error: "Invalid event request." }, { status: 400 }); }
   const tickets = (body.tickets ?? []).filter((ticket) => ticket.name && Number.isInteger(Number(ticket.price)) && Number(ticket.price) >= 0 && Number.isInteger(Number(ticket.quantity)) && Number(ticket.quantity) > 0);
-  if (!body.name || !body.description || !body.date || !body.time || !body.venue || tickets.length === 0) return NextResponse.json({ error: "Event details and at least one valid ticket type are required." }, { status: 400 });
+  if (!body.name || !body.description || !body.date || !body.time || !body.venue || !eventCategories.includes(body.category as typeof eventCategories[number]) || tickets.length === 0) return NextResponse.json({ error: "Event details, category, and at least one valid ticket type are required." }, { status: 400 });
 
   const client = await db.connect();
   try {
     await client.query("BEGIN");
     const eventResult = await client.query<{ id: string }>(
-      `INSERT INTO events (organizer_id, name, description, event_date, start_time, venue, image_url)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-      [user.id, body.name.trim(), body.description.trim(), body.date, body.time, body.venue.trim(), body.imageUrl ?? null],
+      `INSERT INTO events (organizer_id, name, description, event_date, start_time, venue, category, image_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+      [user.id, body.name.trim(), body.description.trim(), body.date, body.time, body.venue.trim(), body.category, body.imageUrl ?? null],
     );
     for (const ticket of tickets) await client.query("INSERT INTO event_ticket_types (event_id, name, price_kes, quantity) VALUES ($1, $2, $3, $4)", [eventResult.rows[0].id, ticket.name, Number(ticket.price), Number(ticket.quantity)]);
     await client.query("COMMIT");
