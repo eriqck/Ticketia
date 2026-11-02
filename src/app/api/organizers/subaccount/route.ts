@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/session";
 import { saveOrganizerPayout } from "@/lib/organizers";
 
 const paystackUrl = "https://api.paystack.co/subaccount";
 
 type SubaccountRequest = {
-  businessName?: string;
   settlementBank?: string;
   accountNumber?: string;
   accountName?: string;
-  email?: string;
   percentageCharge?: number;
 };
 
@@ -17,6 +16,10 @@ export async function POST(request: Request) {
 
   if (!secretKey) {
     return NextResponse.json({ error: "Paystack is not configured." }, { status: 503 });
+  }
+  const user = await getCurrentUser();
+  if (!user || user.account_type !== "organizer") {
+    return NextResponse.json({ error: "Organizer sign-in required." }, { status: 401 });
   }
 
   let body: SubaccountRequest;
@@ -27,8 +30,8 @@ export async function POST(request: Request) {
   }
 
   const percentageCharge = Number(body.percentageCharge ?? process.env.TICKETIA_PLATFORM_FEE_PERCENT ?? 5);
-  if (!body.businessName || !body.settlementBank || !body.accountNumber || !body.accountName || !body.email || percentageCharge < 0 || percentageCharge > 100) {
-    return NextResponse.json({ error: "Business name, verified bank account, email, and a valid split are required." }, { status: 400 });
+  if (!body.settlementBank || !body.accountNumber || !body.accountName || percentageCharge < 0 || percentageCharge > 100) {
+    return NextResponse.json({ error: "A verified bank account and a valid split are required." }, { status: 400 });
   }
 
   const response = await fetch(paystackUrl, {
@@ -38,10 +41,10 @@ export async function POST(request: Request) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      business_name: body.businessName,
+      business_name: user.full_name,
       settlement_bank: body.settlementBank,
       account_number: body.accountNumber,
-      primary_contact_email: body.email,
+      primary_contact_email: user.email,
       percentage_charge: percentageCharge,
     }),
   });
@@ -57,13 +60,14 @@ export async function POST(request: Request) {
   }
 
   await saveOrganizerPayout({
-    businessName: body.businessName,
-    email: body.email,
+    businessName: user.full_name,
+    email: user.email,
     paystackSubaccountCode: payload.data.subaccount_code,
   });
 
   return NextResponse.json({
     subaccountCode: payload.data.subaccount_code,
-    businessName: payload.data.business_name,
+    businessName: payload.data.business_name ?? user.full_name,
+    email: user.email,
   });
 }
