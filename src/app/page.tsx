@@ -66,14 +66,13 @@ export default function Home() {
   const [heroSearch, setHeroSearch] = useState("");
   const [heroTab, setHeroTab] = useState("Events");
   const [featuredIndex, setFeaturedIndex] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [nextPage, setNextPage] = useState(2);
 
   const normalizedSearch = searchQuery.trim().toLowerCase();
   const categories = ["All events", ...eventCategories];
-  const filteredEvents = eventCatalog.filter((event) => {
-    const matchesCategory = activeCategory === "All events" || event.category === activeCategory;
-    const matchesSearch = !normalizedSearch || [event.title, event.category, event.location, event.date].some((value) => value.toLowerCase().includes(normalizedSearch));
-    return matchesCategory && matchesSearch;
-  });
+  const filteredEvents = eventCatalog;
   const paymentQuote = createPaymentQuote(selectedTicket.amount * quantity);
 
   useEffect(() => {
@@ -82,10 +81,6 @@ export default function Home() {
     const selection = window.setTimeout(() => {
       if (event) setSelectedEvent(event);
     }, 0);
-    fetch("/api/public-events").then(async (response) => {
-      const result = await response.json() as { events?: EventItem[] };
-      if (response.ok && result.events?.length) setEventCatalog(result.events);
-    }).catch(() => undefined);
     const rotation = window.setInterval(() => setFeaturedIndex((index) => (index + 1) % eventCatalog.length), 5000);
     return () => {
       window.clearTimeout(selection);
@@ -93,7 +88,39 @@ export default function Home() {
     };
   }, [eventCatalog.length]);
 
-  const featuredEvent = eventCatalog[featuredIndex % eventCatalog.length];
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const params = new URLSearchParams({ page: "1", limit: "12" });
+      if (activeCategory !== "All events") params.set("category", activeCategory);
+      if (normalizedSearch) params.set("search", normalizedSearch);
+      setEventsLoading(true);
+      fetch(`/api/public-events?${params.toString()}`).then(async (response) => {
+        const result = await response.json() as { events?: EventItem[]; pagination?: { hasNextPage?: boolean } };
+        if (!response.ok) return;
+        setEventCatalog(result.events ?? []);
+        setHasNextPage(result.pagination?.hasNextPage ?? false);
+        setNextPage(2);
+        setFeaturedIndex(0);
+      }).catch(() => undefined).finally(() => setEventsLoading(false));
+    }, normalizedSearch ? 250 : 0);
+    return () => window.clearTimeout(timer);
+  }, [activeCategory, normalizedSearch]);
+
+  function loadMoreEvents() {
+    const params = new URLSearchParams({ page: String(nextPage), limit: "12" });
+    if (activeCategory !== "All events") params.set("category", activeCategory);
+    if (normalizedSearch) params.set("search", normalizedSearch);
+    setEventsLoading(true);
+    fetch(`/api/public-events?${params.toString()}`).then(async (response) => {
+      const result = await response.json() as { events?: EventItem[]; pagination?: { hasNextPage?: boolean } };
+      if (!response.ok) return;
+      setEventCatalog((currentEvents) => [...currentEvents, ...(result.events ?? [])]);
+      setHasNextPage(result.pagination?.hasNextPage ?? false);
+      setNextPage((page) => page + 1);
+    }).catch(() => undefined).finally(() => setEventsLoading(false));
+  }
+
+  const featuredEvent = eventCatalog[featuredIndex % eventCatalog.length] ?? events[0];
 
   function findEvents(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -164,7 +191,7 @@ export default function Home() {
       <section className="events-section" id="discover">
         <div className="section-title"><p className="muted-label">Find your next reason to go out</p><h2>All Events</h2></div>
         <div className="category-tabs" role="tablist">{categories.map((category) => <button key={category} className={activeCategory === category ? "category-tab active" : "category-tab"} onClick={() => setActiveCategory(category)} role="tab" aria-selected={activeCategory === category}>{category}</button>)}</div>
-        <div className="event-list">{filteredEvents.map((event) => <article className="event-card" key={event.title}><Link className="event-poster" href={`/events/${eventSlug(event.title)}`} onMouseEnter={() => prefetchEvent(eventSlug(event.title))} aria-label={`View ${event.title}`} style={{ backgroundImage: `url(${event.image})` }}><span className="category-pill">{event.category}</span></Link><div className="event-card-content"><div><h3>{event.title}</h3><p>{event.date}</p><p>{event.location}</p></div><strong>{event.price}</strong></div></article>)}</div>{filteredEvents.length === 0 && <p className="empty-search">No events match “{searchQuery}”. Try another city, category or event name.</p>}
+        <div className="event-list">{filteredEvents.map((event) => <article className="event-card" key={event.title}><Link className="event-poster" href={`/events/${eventSlug(event.title)}`} onMouseEnter={() => prefetchEvent(eventSlug(event.title))} aria-label={`View ${event.title}`} style={{ backgroundImage: `url(${event.image})` }}><span className="category-pill">{event.category}</span></Link><div className="event-card-content"><div><h3>{event.title}</h3><p>{event.date}</p><p>{event.location}</p></div><strong>{event.price}</strong></div></article>)}</div>{eventsLoading && <p className="dashboard-muted">Loading events...</p>}{hasNextPage && !eventsLoading && <button className="action action-dark" onClick={loadMoreEvents}>Load more events</button>}{filteredEvents.length === 0 && !eventsLoading && <p className="empty-search">No events match “{searchQuery}”. Try another city, category or event name.</p>}
       </section>
 
       <section className="organizer-section" id="organizers"><div><p className="muted-label">For organizers</p><h2>Sell everywhere.<br /><span>One inventory.</span></h2></div><div><p>Create an event once, then share one live ticket link to WhatsApp, Instagram, your website, SMS or a QR poster.</p><a className="action action-gold" href="/signup?role=organizer">Start selling</a></div></section>

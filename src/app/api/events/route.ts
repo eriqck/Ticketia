@@ -10,16 +10,40 @@ export async function GET() {
   if (!user || user.account_type !== "organizer") return NextResponse.json({ error: "Organizer sign-in required." }, { status: 401 });
 
   const result = await db.query(
-    `SELECT e.id, e.name, e.description, e.event_date, e.start_time, e.venue,
-      CASE WHEN e.event_date < CURRENT_DATE THEN 'expired'
-        WHEN e.status = 'published' AND COALESCE((SELECT COUNT(*) FROM tickets tk JOIN orders o ON o.id = tk.order_id WHERE o.event_title = e.name AND tk.status <> 'void'), 0) >= COALESCE(SUM(t.quantity), 0) AND COALESCE(SUM(t.quantity), 0) > 0 THEN 'sold_out'
-        ELSE e.status END AS status,
-      COALESCE(SUM(t.quantity), 0)::int AS tickets_total,
-      COALESCE((SELECT COUNT(*) FROM tickets tk JOIN orders o ON o.id = tk.order_id WHERE o.event_title = e.name AND tk.status <> 'void'), 0)::int AS tickets_sold,
-      COALESCE((SELECT SUM(o.total_amount_kes) FROM orders o WHERE o.event_title = e.name AND o.status = 'paid'), 0)::int AS revenue_kes,
-      0::int AS scans
-     FROM events e LEFT JOIN event_ticket_types t ON t.event_id = e.id
-     WHERE e.organizer_id = $1 GROUP BY e.id ORDER BY e.created_at DESC`,
+    `WITH ticket_totals AS (
+       SELECT event_id, SUM(quantity)::int AS tickets_total
+       FROM event_ticket_types
+       GROUP BY event_id
+     ),
+     ticket_sales AS (
+       SELECT o.event_id, COUNT(tk.id)::int AS tickets_sold
+       FROM orders o
+       JOIN tickets tk ON tk.order_id = o.id
+       WHERE o.event_id IS NOT NULL AND tk.status <> 'void'
+       GROUP BY o.event_id
+     ),
+     order_sales AS (
+       SELECT event_id, SUM(total_amount_kes)::int AS revenue_kes
+       FROM orders
+       WHERE event_id IS NOT NULL AND status = 'paid'
+       GROUP BY event_id
+     )
+     SELECT e.id, e.name, e.description, e.event_date, e.start_time, e.venue,
+       CASE WHEN e.event_date < CURRENT_DATE THEN 'expired'
+         WHEN e.status = 'published'
+           AND COALESCE(ts.tickets_sold, 0) >= COALESCE(tt.tickets_total, 0)
+           AND COALESCE(tt.tickets_total, 0) > 0 THEN 'sold_out'
+         ELSE e.status END AS status,
+       COALESCE(tt.tickets_total, 0)::int AS tickets_total,
+       COALESCE(ts.tickets_sold, 0)::int AS tickets_sold,
+       COALESCE(os.revenue_kes, 0)::int AS revenue_kes,
+       0::int AS scans
+     FROM events e
+     LEFT JOIN ticket_totals tt ON tt.event_id = e.id
+     LEFT JOIN ticket_sales ts ON ts.event_id = e.id
+     LEFT JOIN order_sales os ON os.event_id = e.id
+     WHERE e.organizer_id = $1
+     ORDER BY e.created_at DESC`,
     [user.id],
   );
 
