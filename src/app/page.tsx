@@ -41,6 +41,12 @@ function eventSlug(title: string) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
+function mergeEvents(currentEvents: EventItem[], nextEvents: EventItem[]) {
+  const merged = new Map(currentEvents.map((event) => [eventSlug(event.title), event]));
+  nextEvents.forEach((event) => merged.set(eventSlug(event.title), event));
+  return Array.from(merged.values());
+}
+
 function prefetchEvent(slug: string) {
   const key = `ticketia:event:${slug}`;
   if (sessionStorage.getItem(key)) return;
@@ -72,7 +78,11 @@ export default function Home() {
 
   const normalizedSearch = searchQuery.trim().toLowerCase();
   const categories = ["All events", ...eventCategories];
-  const filteredEvents = eventCatalog;
+  const filteredEvents = eventCatalog.filter((event) => {
+    const matchesCategory = activeCategory === "All events" || event.category === activeCategory;
+    const matchesSearch = !normalizedSearch || [event.title, event.category, event.location, event.date].some((value) => value.toLowerCase().includes(normalizedSearch));
+    return matchesCategory && matchesSearch;
+  });
   const paymentQuote = createPaymentQuote(selectedTicket.amount * quantity);
 
   useEffect(() => {
@@ -94,10 +104,10 @@ export default function Home() {
       if (activeCategory !== "All events") params.set("category", activeCategory);
       if (normalizedSearch) params.set("search", normalizedSearch);
       setEventsLoading(true);
-      fetch(`/api/public-events?${params.toString()}`).then(async (response) => {
+      fetch(`/api/public-events?${params.toString()}`, { cache: "no-store" }).then(async (response) => {
         const result = await response.json() as { events?: EventItem[]; pagination?: { hasNextPage?: boolean } };
         if (!response.ok) return;
-        setEventCatalog(result.events ?? []);
+        setEventCatalog((currentEvents) => mergeEvents(currentEvents, result.events ?? []));
         setHasNextPage(result.pagination?.hasNextPage ?? false);
         setNextPage(2);
         setFeaturedIndex(0);
@@ -111,10 +121,10 @@ export default function Home() {
     if (activeCategory !== "All events") params.set("category", activeCategory);
     if (normalizedSearch) params.set("search", normalizedSearch);
     setEventsLoading(true);
-    fetch(`/api/public-events?${params.toString()}`).then(async (response) => {
+    fetch(`/api/public-events?${params.toString()}`, { cache: "no-store" }).then(async (response) => {
       const result = await response.json() as { events?: EventItem[]; pagination?: { hasNextPage?: boolean } };
       if (!response.ok) return;
-      setEventCatalog((currentEvents) => [...currentEvents, ...(result.events ?? [])]);
+      setEventCatalog((currentEvents) => mergeEvents(currentEvents, result.events ?? []));
       setHasNextPage(result.pagination?.hasNextPage ?? false);
       setNextPage((page) => page + 1);
     }).catch(() => undefined).finally(() => setEventsLoading(false));

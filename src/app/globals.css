@@ -97,6 +97,9 @@
 .event-summary-card, .event-detail-main, .event-ticket-panel { background: #fff; border: 1px solid #e5e8ee; border-radius: 20px; box-shadow: 0 8px 26px rgba(28,36,52,.07); }
 .event-summary-card { grid-column: 1; overflow: hidden; }
 .event-poster-frame { background: #eef0f4; min-height: 460px; }
+.event-poster-loading { align-items: center; display: flex; justify-content: center; }
+.event-poster-loading:after { border: 3px solid #e3e6ec; border-radius: 50%; border-top-color: #6900a4; content: ''; height: 30px; width: 30px; animation: event-spin .8s linear infinite; }
+@keyframes event-spin { to { transform: rotate(360deg); } }
 .event-hero-image { display: block; height: 100%; max-height: 560px; object-fit: cover; width: 100%; }
 .event-summary { padding: 26px 30px 24px; }
 .event-category, .ticket-panel-heading span { background: #f1e7fb; border-radius: 999px; color: #6500a1; display: inline-flex; font-size: .72rem; font-weight: 700; padding: 7px 12px; }
