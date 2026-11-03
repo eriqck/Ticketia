@@ -40,15 +40,18 @@ export default function EventPage() {
         const result = JSON.parse(cached) as { event?: EventDetail & { imageUrl?: string } | null };
         if (result.event) {
           const nextEvent = { ...result.event, hero: result.event.hero || result.event.imageUrl || fallbackEvent.hero, photos: result.event.photos ?? [] };
-          setEventData(nextEvent);
-          setSelectedTicket(nextEvent.tickets[0]);
-          setUploadedHero(result.event.imageUrl ?? "");
+          window.setTimeout(() => {
+            setEventData(nextEvent);
+            setSelectedTicket(nextEvent.tickets[0]);
+            setUploadedHero(result.event?.imageUrl ?? "");
+          }, 0);
         }
       } catch {
         sessionStorage.removeItem(cacheKey);
       }
     }
-    fetch(`/api/public-events/${params.slug}`).then(async (response) => {
+    const controller = new AbortController();
+    fetch(`/api/public-events/${params.slug}`, { signal: controller.signal }).then(async (response) => {
       const result = await response.json() as { event?: EventDetail & { imageUrl?: string } | null };
       if (!response.ok || !result.event) throw new Error("Event unavailable.");
       const nextEvent = { ...result.event, hero: result.event.hero || result.event.imageUrl || fallbackEvent.hero, photos: result.event.photos ?? [] };
@@ -56,7 +59,10 @@ export default function EventPage() {
       setSelectedTicket(nextEvent.tickets[0]);
       setUploadedHero(result.event.imageUrl ?? "");
       sessionStorage.setItem(cacheKey, JSON.stringify(result));
-    }).catch(() => undefined);
+    }).catch((requestError) => {
+      if (requestError instanceof DOMException && requestError.name === "AbortError") return;
+    });
+    return () => controller.abort();
   }, [params.slug, fallbackEvent.hero]);
 
   async function checkout() {

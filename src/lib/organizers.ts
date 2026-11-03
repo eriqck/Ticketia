@@ -39,26 +39,22 @@ export async function findEventTicket(slug: string, ticketName: string) {
      t.name AS ticket_name,
      t.price_kes AS ticket_price_kes,
      t.quantity AS ticket_quantity,
-     COALESCE((
-       SELECT COUNT(*)
-       FROM tickets tk
-       JOIN orders ord ON ord.id = tk.order_id
-       WHERE ord.event_id = e.id
-         AND ord.ticket_type = t.name
-         AND tk.status <> 'void'
-     ), 0)::int AS tickets_sold,
+     COUNT(tk.id) FILTER (WHERE tk.status <> 'void')::int AS tickets_sold,
      o.paystack_subaccount_code,
      o.payout_status
      FROM events e
      JOIN event_ticket_types t ON t.event_id = e.id
      JOIN users u ON u.id = e.organizer_id
      LEFT JOIN organizers o ON LOWER(o.email) = LOWER(u.email)
+     LEFT JOIN orders ord ON ord.event_id = e.id AND LOWER(ord.ticket_type) = LOWER(t.name)
+     LEFT JOIN tickets tk ON tk.order_id = ord.id
      WHERE e.status = 'published'
        AND LOWER(REGEXP_REPLACE(
          REGEXP_REPLACE(TRIM(e.name), '[^a-zA-Z0-9]+', '-', 'g'),
          '(^-|-$)', '', 'g'
        )) = LOWER($1)
        AND LOWER(t.name) = LOWER($2)
+     GROUP BY e.id, t.id, o.paystack_subaccount_code, o.payout_status
      LIMIT 1`,
     [slug, ticketName],
   );
