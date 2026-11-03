@@ -13,7 +13,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const client = await db.connect();
     try {
       await client.query("BEGIN");
-      await client.query("UPDATE events SET name = $1, description = $2, event_date = $3, start_time = $4, venue = $5, category = $6, image_url = COALESCE($7, image_url), updated_at = NOW() WHERE id = $8 AND organizer_id = $9", [body.name.trim(), body.description.trim(), body.date, body.time, body.venue.trim(), body.category, body.imageUrl ?? null, id, user.id]);
+      await client.query("UPDATE events SET name = $1, slug = $2, description = $3, event_date = $4, start_time = $5, venue = $6, category = $7, image_url = COALESCE($8, image_url), updated_at = NOW() WHERE id = $9 AND organizer_id = $10", [body.name.trim(), body.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""), body.description.trim(), body.date, body.time, body.venue.trim(), body.category, body.imageUrl ?? null, id, user.id]);
       await client.query("DELETE FROM event_ticket_types WHERE event_id = $1", [id]);
       for (const ticket of body.tickets) if (ticket.name && Number(ticket.quantity) > 0 && Number(ticket.price) >= 0) await client.query("INSERT INTO event_ticket_types (event_id, name, price_kes, quantity) VALUES ($1, $2, $3, $4)", [id, ticket.name, Number(ticket.price), Number(ticket.quantity)]);
       await client.query("COMMIT");

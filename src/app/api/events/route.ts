@@ -62,9 +62,9 @@ export async function POST(request: Request) {
   try {
     await client.query("BEGIN");
     const eventResult = await client.query<{ id: string }>(
-      `INSERT INTO events (organizer_id, name, description, event_date, start_time, venue, category, image_url)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-      [user.id, body.name.trim(), body.description.trim(), body.date, body.time, body.venue.trim(), body.category, body.imageUrl ?? null],
+      `INSERT INTO events (organizer_id, name, slug, description, event_date, start_time, venue, category, image_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+      [user.id, body.name.trim(), body.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""), body.description.trim(), body.date, body.time, body.venue.trim(), body.category, body.imageUrl ?? null],
     );
     for (const ticket of tickets) await client.query("INSERT INTO event_ticket_types (event_id, name, price_kes, quantity) VALUES ($1, $2, $3, $4)", [eventResult.rows[0].id, ticket.name, Number(ticket.price), Number(ticket.quantity)]);
     await client.query("COMMIT");

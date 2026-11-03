@@ -14,6 +14,7 @@ export async function GET(request: Request) {
   const offset = (page - 1) * limit;
   const result = await db.query<{
     name: string;
+    slug: string | null;
     event_date: string;
     start_time: string;
     venue: string;
@@ -22,7 +23,7 @@ export async function GET(request: Request) {
     min_price: number | null;
     total_count: number;
   }>(
-    `SELECT e.name, e.event_date, e.start_time, e.venue, e.image_url,
+    `SELECT e.name, e.slug, e.event_date, e.start_time, e.venue, e.image_url,
       e.category, MIN(t.price_kes)::int AS min_price,
       COUNT(*) OVER ()::int AS total_count
      FROM events e
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     events: result.rows.map((event) => ({
       title: event.name,
-      slug: slugify(event.name),
+      slug: event.slug ?? slugify(event.name),
       date: formatEventDate(event.event_date),
       time: event.start_time.slice(0, 5),
       location: event.venue,

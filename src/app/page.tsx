@@ -4,17 +4,9 @@ import Link from "next/link";
 import { type FormEvent, useEffect, useState } from "react";
 import { createPaymentQuote } from "@/lib/payments";
 import { eventCategories } from "@/lib/event-categories";
+import { prefetchPublicEvent, type PublicEvent } from "@/lib/public-event-cache";
 
-type EventItem = {
-  title: string;
-  date: string;
-  time: string;
-  location: string;
-  category: string;
-  price: string;
-  amount: number;
-  image: string;
-};
+type EventItem = PublicEvent;
 
 type TicketOption = {
   name: string;
@@ -45,16 +37,6 @@ function mergeEvents(currentEvents: EventItem[], nextEvents: EventItem[]) {
   const merged = new Map(currentEvents.map((event) => [eventSlug(event.title), event]));
   nextEvents.forEach((event) => merged.set(eventSlug(event.title), event));
   return Array.from(merged.values());
-}
-
-function prefetchEvent(slug: string) {
-  const key = `ticketia:event:${slug}`;
-  if (sessionStorage.getItem(key)) return;
-  void fetch(`/api/public-events/${slug}`).then(async (response) => {
-    if (!response.ok) return;
-    const result = await response.json();
-    sessionStorage.setItem(key, JSON.stringify(result));
-  }).catch(() => undefined);
 }
 
 export default function Home() {
@@ -115,6 +97,24 @@ export default function Home() {
     }, normalizedSearch ? 250 : 0);
     return () => window.clearTimeout(timer);
   }, [activeCategory, normalizedSearch]);
+
+  useEffect(() => {
+    const links = Array.from(document.querySelectorAll<HTMLElement>("[data-event-slug]"));
+    if (!("IntersectionObserver" in window)) {
+      links.forEach((link) => prefetchPublicEvent(link.dataset.eventSlug ?? ""));
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const slug = (entry.target as HTMLElement).dataset.eventSlug;
+        if (slug) prefetchPublicEvent(slug);
+        observer.unobserve(entry.target);
+      });
+    }, { rootMargin: "300px" });
+    links.forEach((link) => observer.observe(link));
+    return () => observer.disconnect();
+  }, [eventCatalog]);
 
   function loadMoreEvents() {
     const params = new URLSearchParams({ page: String(nextPage), limit: "12" });
@@ -185,7 +185,7 @@ export default function Home() {
       <section className="hero" id="top">
         <div className="hero-content">
           <div className="hero-search-panel"><div className="hero-tabs">{["Events", "Flights", "Holidays"].map((tab) => <button key={tab} className={heroTab === tab ? "hero-tab active" : "hero-tab"} onClick={() => setHeroTab(tab)}>{tab}</button>)}</div><form onSubmit={findEvents}><label><span>Event name</span><input value={heroSearch} onChange={(event) => setHeroSearch(event.target.value)} placeholder={heroTab === "Events" ? "Search events" : `${heroTab} coming soon`} disabled={heroTab !== "Events"} /></label><label><span>City</span><input placeholder="Nairobi" disabled={heroTab !== "Events"} /></label><button className="hero-find-button" disabled={heroTab !== "Events"}>Find Your Event</button></form></div>
-          <div className="hero-featured"><Link className="hero-featured-poster" href={`/events/${eventSlug(featuredEvent.title)}`} onMouseEnter={() => prefetchEvent(eventSlug(featuredEvent.title))} onFocus={() => prefetchEvent(eventSlug(featuredEvent.title))} onTouchStart={() => prefetchEvent(eventSlug(featuredEvent.title))} style={{ backgroundImage: `url(${featuredEvent.image})` }} aria-label={`View ${featuredEvent.title}`}><span className="category-pill">{featuredEvent.category}</span><strong>{featuredEvent.title}</strong></Link><Link className="hero-featured-card" href={`/events/${eventSlug(featuredEvent.title)}`} onMouseEnter={() => prefetchEvent(eventSlug(featuredEvent.title))} onFocus={() => prefetchEvent(eventSlug(featuredEvent.title))} onTouchStart={() => prefetchEvent(eventSlug(featuredEvent.title))}><strong>{featuredEvent.title}</strong><span>{featuredEvent.location}</span><b>{featuredEvent.price}</b><em>View ›</em></Link><div className="hero-dots">{eventCatalog.map((event, index) => <button key={event.title} className={index === featuredIndex ? "active" : ""} onClick={() => setFeaturedIndex(index)} aria-label={`Show ${event.title}`} />)}</div></div>
+          <div className="hero-featured"><Link data-event-slug={eventSlug(featuredEvent.title)} className="hero-featured-poster" href={`/events/${eventSlug(featuredEvent.title)}`} onMouseEnter={() => prefetchPublicEvent(eventSlug(featuredEvent.title))} onFocus={() => prefetchPublicEvent(eventSlug(featuredEvent.title))} onTouchStart={() => prefetchPublicEvent(eventSlug(featuredEvent.title))} style={{ backgroundImage: `url(${featuredEvent.image})` }} aria-label={`View ${featuredEvent.title}`}><span className="category-pill">{featuredEvent.category}</span><strong>{featuredEvent.title}</strong></Link><Link data-event-slug={eventSlug(featuredEvent.title)} className="hero-featured-card" href={`/events/${eventSlug(featuredEvent.title)}`} onMouseEnter={() => prefetchPublicEvent(eventSlug(featuredEvent.title))} onFocus={() => prefetchPublicEvent(eventSlug(featuredEvent.title))} onTouchStart={() => prefetchPublicEvent(eventSlug(featuredEvent.title))}><strong>{featuredEvent.title}</strong><span>{featuredEvent.location}</span><b>{featuredEvent.price}</b><em>View ›</em></Link><div className="hero-dots">{eventCatalog.map((event, index) => <button key={event.title} className={index === featuredIndex ? "active" : ""} onClick={() => setFeaturedIndex(index)} aria-label={`Show ${event.title}`} />)}</div></div>
         </div>
       </section>
 
@@ -195,13 +195,13 @@ export default function Home() {
 
       <section className="featured-event" aria-label="Featured event">
         <div className="featured-poster" style={{ backgroundImage: `url(${events[0].image})` }}><span className="category-pill">{events[0].category}</span><span className="poster-label">Pineapple<br /><em>Party</em></span></div>
-        <div className="featured-details"><div><p className="muted-label">Featured event</p><h2>{events[0].title}</h2><p className="event-line">▣ &nbsp;{events[0].date}</p><p className="event-line">◷ &nbsp;{events[0].time}</p><p className="event-line">⌖ &nbsp;{events[0].location}</p></div><div className="featured-price"><p>Starting from</p><strong>{events[0].price}</strong></div><Link className="outline-button" href={`/events/${eventSlug(events[0].title)}`} onMouseEnter={() => prefetchEvent(eventSlug(events[0].title))} onFocus={() => prefetchEvent(eventSlug(events[0].title))} onTouchStart={() => prefetchEvent(eventSlug(events[0].title))}>View event</Link></div>
+        <div className="featured-details"><div><p className="muted-label">Featured event</p><h2>{events[0].title}</h2><p className="event-line">▣ &nbsp;{events[0].date}</p><p className="event-line">◷ &nbsp;{events[0].time}</p><p className="event-line">⌖ &nbsp;{events[0].location}</p></div><div className="featured-price"><p>Starting from</p><strong>{events[0].price}</strong></div><Link data-event-slug={eventSlug(events[0].title)} className="outline-button" href={`/events/${eventSlug(events[0].title)}`} onMouseEnter={() => prefetchPublicEvent(eventSlug(events[0].title))} onFocus={() => prefetchPublicEvent(eventSlug(events[0].title))} onTouchStart={() => prefetchPublicEvent(eventSlug(events[0].title))}>View event</Link></div>
       </section>
 
       <section className="events-section" id="discover">
         <div className="section-title"><p className="muted-label">Find your next reason to go out</p><h2>All Events</h2></div>
         <div className="category-tabs" role="tablist">{categories.map((category) => <button key={category} className={activeCategory === category ? "category-tab active" : "category-tab"} onClick={() => setActiveCategory(category)} role="tab" aria-selected={activeCategory === category}>{category}</button>)}</div>
-        <div className="event-list">{filteredEvents.map((event) => <article className="event-card" key={event.title}><Link className="event-poster" href={`/events/${eventSlug(event.title)}`} onMouseEnter={() => prefetchEvent(eventSlug(event.title))} onFocus={() => prefetchEvent(eventSlug(event.title))} onTouchStart={() => prefetchEvent(eventSlug(event.title))} aria-label={`View ${event.title}`} style={{ backgroundImage: `url(${event.image})` }}><span className="category-pill">{event.category}</span></Link><div className="event-card-content"><div><h3>{event.title}</h3><p>{event.date}</p><p>{event.location}</p></div><strong>{event.price}</strong></div></article>)}</div>{eventsLoading && <p className="dashboard-muted">Loading events...</p>}{hasNextPage && !eventsLoading && <button className="action action-dark" onClick={loadMoreEvents}>Load more events</button>}{filteredEvents.length === 0 && !eventsLoading && <p className="empty-search">No events match “{searchQuery}”. Try another city, category or event name.</p>}
+        <div className="event-list">{filteredEvents.map((event) => <article className="event-card" key={event.title}><Link data-event-slug={eventSlug(event.title)} className="event-poster" href={`/events/${eventSlug(event.title)}`} onMouseEnter={() => prefetchPublicEvent(eventSlug(event.title))} onFocus={() => prefetchPublicEvent(eventSlug(event.title))} onTouchStart={() => prefetchPublicEvent(eventSlug(event.title))} aria-label={`View ${event.title}`} style={{ backgroundImage: `url(${event.image})` }}><span className="category-pill">{event.category}</span></Link><div className="event-card-content"><div><h3>{event.title}</h3><p>{event.date}</p><p>{event.location}</p></div><strong>{event.price}</strong></div></article>)}</div>{eventsLoading && <p className="dashboard-muted">Loading events...</p>}{hasNextPage && !eventsLoading && <button className="action action-dark" onClick={loadMoreEvents}>Load more events</button>}{filteredEvents.length === 0 && !eventsLoading && <p className="empty-search">No events match “{searchQuery}”. Try another city, category or event name.</p>}
       </section>
 
       <section className="organizer-section" id="organizers"><div><p className="muted-label">For organizers</p><h2>Sell everywhere.<br /><span>One inventory.</span></h2></div><div><p>Create an event once, then share one live ticket link to WhatsApp, Instagram, your website, SMS or a QR poster.</p><a className="action action-gold" href="/signup?role=organizer">Start selling</a></div></section>

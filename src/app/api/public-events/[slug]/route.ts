@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { formatEventDate } from "@/lib/event-format";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const startedAt = performance.now();
   if (!process.env.DATABASE_URL) return NextResponse.json({ error: "Public events are not configured." }, { status: 503 });
   const { slug } = await params;
   const result = await db.query<{
@@ -29,14 +30,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
      JOIN users u ON u.id = e.organizer_id
      LEFT JOIN event_ticket_types t ON t.event_id = e.id
      WHERE e.status = 'published'
-       AND LOWER(REGEXP_REPLACE(
-         REGEXP_REPLACE(TRIM(e.name), '[^a-zA-Z0-9]+', '-', 'g'),
-         '(^-|-$)', '', 'g'
-       )) = LOWER($1)
+       AND LOWER(e.slug) = LOWER($1)
      GROUP BY e.id, u.full_name`,
     [slug],
   );
   const event = result.rows[0];
+  console.info("public_event_detail", { slug, durationMs: Math.round(performance.now() - startedAt), found: Boolean(event) });
   if (!event) return NextResponse.json({ event: null });
   return NextResponse.json({
     event: {

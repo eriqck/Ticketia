@@ -6,6 +6,8 @@ Kenya-first event commerce with Paystack checkout and organizer subaccount payou
 
 Copy `.env.example` to `.env.local`, set your Paystack secret key from the Paystack Dashboard, `DATABASE_URL`, `SCANNER_SNAPSHOT_KEY`, an Ed25519 `TICKET_SIGNING_PRIVATE_KEY`/`TICKET_SIGNING_PUBLIC_KEY` pair, and the Supabase Storage values. Create a public `event-media` bucket (or use the bucket named by `SUPABASE_STORAGE_BUCKET`) in Supabase Storage. Do not commit `.env.local` or share server-only secrets such as the Supabase service-role key. Apply the PostgreSQL migrations in `db/migrations/` before enabling database-backed payouts and offline ticket verification. Organizer subaccount codes are created by `/organizer` and persisted in PostgreSQL; they are not configured as a global demo value.
 
+Before deploying the performance changes, apply all PostgreSQL migrations in order, including `db/migrations/011_event_dashboard_indexes.sql`, `db/migrations/012_public_event_lookup_indexes.sql`, and `db/migrations/013_event_slugs.sql`. Vercel must use the hosted production PostgreSQL connection string, preferably the provider's pooler connection for serverless workloads; never use the local `DATABASE_URL` from `.env.local` in production. Checkout always rechecks live ticket inventory before creating a payment.
+
 Start the development server:
 
 ```bash

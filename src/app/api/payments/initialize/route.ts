@@ -16,6 +16,7 @@ type InitializeRequest = {
 };
 
 export async function POST(request: Request) {
+  const startedAt = performance.now();
   const secretKey = process.env.PAYSTACK_SECRET_KEY;
 
   if (!secretKey) {
@@ -108,6 +109,7 @@ export async function POST(request: Request) {
   }
 
   await addPaymentAttempt(reference);
+  console.info("payment_initialization", { eventSlug: body.eventSlug, durationMs: Math.round(performance.now() - startedAt) });
 
   return NextResponse.json({
     authorizationUrl: payload.data.authorization_url,
