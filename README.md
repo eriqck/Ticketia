@@ -10,6 +10,8 @@ Before deploying the performance changes, apply all PostgreSQL migrations in ord
 
 The public event catalog is deliberately uncached (`no-store`) so newly published events appear on the next viewer request. Events dated before today are excluded from the public catalog by design.
 
+Events without an uploaded poster use the local Ticketia system banner at `/ticketia-event-banner.svg`.
+
 Start the development server:
 
 ```bash

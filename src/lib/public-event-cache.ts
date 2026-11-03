@@ -9,6 +9,8 @@ export type PublicEvent = {
   image: string;
 };
 
+export const DEFAULT_EVENT_BANNER = "/ticketia-event-banner.svg";
+
 type EventDetailResponse = { event?: unknown | null };
 
 const detailRequests = new Map<string, Promise<EventDetailResponse>>();

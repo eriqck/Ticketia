@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { formatEventDate } from "@/lib/event-format";
+import { DEFAULT_EVENT_BANNER } from "@/lib/public-event-cache";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -56,7 +57,7 @@ export async function GET(request: Request) {
       category: event.category ?? "Events",
       price: `KSh ${Number(event.min_price ?? 0).toLocaleString()}`,
       amount: Number(event.min_price ?? 0),
-      image: event.image_url ?? "",
+      image: event.image_url || DEFAULT_EVENT_BANNER,
     })),
     pagination: {
       page,

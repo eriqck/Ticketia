@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title description">
+  <title id="title">Ticketia event banner</title>
+  <desc id="description">A branded Ticketia banner used when an event has no uploaded poster.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#181511"/>
+      <stop offset=".55" stop-color="#4a2026"/>
+      <stop offset="1" stop-color="#cf2028"/>
+    </linearGradient>
+    <radialGradient id="glow" cx=".8" cy=".2" r=".75">
+      <stop offset="0" stop-color="#f0abfc" stop-opacity=".85"/>
+      <stop offset="1" stop-color="#f0abfc" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#background)"/>
+  <rect width="1600" height="900" fill="url(#glow)"/>
+  <circle cx="1370" cy="170" r="220" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="3"/>
+  <circle cx="1370" cy="170" r="300" fill="none" stroke="#fff" stroke-opacity=".1" stroke-width="3"/>
+  <path d="M0 750C280 570 430 850 720 680s450-100 880 40v180H0Z" fill="#08090a" fill-opacity=".38"/>
+  <text x="110" y="350" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="118" font-weight="700" letter-spacing="-5">TICKETIA</text>
+  <text x="118" y="445" fill="#f0abfc" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700" letter-spacing="9">YOUR NEXT REASON TO GO OUT</text>
+  <text x="118" y="790" fill="#fff" fill-opacity=".78" font-family="Arial, Helvetica, sans-serif" font-size="28" letter-spacing="4">EVENT DETAILS COMING SOON</text>
+</svg>

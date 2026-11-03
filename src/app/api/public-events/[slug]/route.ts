@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { formatEventDate } from "@/lib/event-format";
+import { DEFAULT_EVENT_BANNER } from "@/lib/public-event-cache";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const startedAt = performance.now();
@@ -48,9 +49,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
       time: event.start_time.slice(0, 5),
       venue: event.venue,
       organizer: event.organizer_name,
-      imageUrl: event.image_url,
-      hero: event.image_url,
-      photos: event.image_url ? [event.image_url] : [],
+      imageUrl: event.image_url || DEFAULT_EVENT_BANNER,
+      hero: event.image_url || DEFAULT_EVENT_BANNER,
+      photos: event.image_url ? [event.image_url] : [DEFAULT_EVENT_BANNER],
       tickets: event.tickets,
     },
   }, {

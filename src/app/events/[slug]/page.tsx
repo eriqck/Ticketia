@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { getEventDetailCacheKey } from "@/lib/public-event-cache";
+import { DEFAULT_EVENT_BANNER, getEventDetailCacheKey } from "@/lib/public-event-cache";
 
 type EventDetail = { title: string; category: string; date: string; time: string; venue: string; description: string; hero: string; photos: string[]; organizer: string; tickets: Array<{ name: string; amount: number; description: string }> };
 
@@ -25,7 +25,7 @@ export default function EventPage() {
       time: "",
       venue: "Loading venue...",
       description: "Loading event details...",
-      hero: "",
+      hero: DEFAULT_EVENT_BANNER,
       photos: [],
       organizer: "Ticketia organizer",
       tickets: [{ name: "Loading tickets", amount: 0, description: "Please wait while ticket options load." }],
