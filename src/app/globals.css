@@ -90,9 +90,9 @@
 .mobile-tabbar { display: none; }
 
 .event-page { background: #f7f8fa; color: #171923; min-height: 100vh; }
-.event-page .site-header { background: #fff; border-bottom: 1px solid #e6e8ed; color: #171923; }
+.event-page .site-header { background: #1a1b1d; border-bottom: 1px solid #34363a; color: #fff; }
 .event-page .brand-logo { filter: none; }
-.event-page .event-back { color: #5f6675; }
+.event-page .event-back { color: #fff; }
 .event-shell { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr) 430px; margin: 0 auto; max-width: 1180px; padding: 34px 28px 90px; }
 .event-summary-card, .event-detail-main, .event-ticket-panel { background: #fff; border: 1px solid #e5e8ee; border-radius: 20px; box-shadow: 0 8px 26px rgba(28,36,52,.07); }
 .event-summary-card { grid-column: 1; overflow: hidden; }
