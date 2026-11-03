@@ -8,6 +8,8 @@ Copy `.env.example` to `.env.local`, set your Paystack secret key from the Payst
 
 Before deploying the performance changes, apply all PostgreSQL migrations in order, including `db/migrations/011_event_dashboard_indexes.sql`, `db/migrations/012_public_event_lookup_indexes.sql`, and `db/migrations/013_event_slugs.sql`. Vercel must use the hosted production PostgreSQL connection string, preferably the provider's pooler connection for serverless workloads; never use the local `DATABASE_URL` from `.env.local` in production. Checkout always rechecks live ticket inventory before creating a payment.
 
+The public event catalog is deliberately uncached (`no-store`) so newly published events appear on the next viewer request. Events dated before today are excluded from the public catalog by design.
+
 Start the development server:
 
 ```bash

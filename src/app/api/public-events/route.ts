@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { formatEventDate } from "@/lib/event-format";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 function slugify(value: string) { return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""); }
 
 export async function GET(request: Request) {
@@ -63,7 +66,7 @@ export async function GET(request: Request) {
     },
   }, {
     headers: {
-      "Cache-Control": "public, s-maxage=5, stale-while-revalidate=30",
+      "Cache-Control": "no-store, max-age=0",
     },
   });
 }

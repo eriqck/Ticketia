@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { eventCategories } from "@/lib/event-categories";
@@ -23,6 +24,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (!body.status) return NextResponse.json({ error: "Complete all event details and choose a valid category, or provide a valid event status." }, { status: 400 });
   const result = await db.query("UPDATE events SET status = $1, updated_at = NOW() WHERE id = $2 AND organizer_id = $3 RETURNING id, status", [body.status, id, user.id]);
   if (!result.rowCount) return NextResponse.json({ error: "Event not found." }, { status: 404 });
+  revalidatePath("/api/public-events");
   return NextResponse.json({ event: result.rows[0] });
 }
 
