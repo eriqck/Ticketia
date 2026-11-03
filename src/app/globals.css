@@ -89,23 +89,54 @@
 .ticketia-app .site-footer .brand { color: var(--ink); }
 .mobile-tabbar { display: none; }
 
-.event-page { background: var(--paper); color: var(--ink); }
-.event-page .site-header { background: rgba(9,9,11,.9); border-bottom-color: var(--line); }
-.event-page .brand-logo { filter: brightness(0) invert(1); }
-.event-page .event-back { color: var(--muted); }
-.event-page .event-hero { min-height: 590px; }
-.event-page .event-detail-layout { padding-bottom: 110px; }
-.event-page .event-detail-main h2 span { color: var(--gold); }
-.event-page .event-ticket-panel { background: var(--surface); border: 1px solid #3f3f46; border-radius: 20px; box-shadow: 0 25px 70px rgba(0,0,0,.28); color: var(--ink); padding: 28px; position: sticky; top: 24px; }
-.event-page .landing-ticket { background: transparent; border-color: #3f3f46; color: var(--ink); }
-.event-page .landing-ticket.selected { background: rgba(217,70,239,.12); border-color: var(--gold); }
-.event-page .landing-ticket small, .event-page .landing-quantity, .event-page .landing-fees, .event-page .secure-note { color: var(--muted); }
-.event-page .quantity-control { border-color: #52525b; }
-.event-page .quantity-control button { background: transparent; color: var(--ink); }
-.event-page .landing-total { border-color: #52525b; }
-.event-page .phone-input { background: var(--surface-raised); border-color: #52525b; }
-.event-page .phone-input input { background: transparent; color: var(--ink); }
-.event-page .action-gold { background: var(--gold); color: #09090b; width: 100%; }
+.event-page { background: #f7f8fa; color: #171923; min-height: 100vh; }
+.event-page .site-header { background: #fff; border-bottom: 1px solid #e6e8ed; color: #171923; }
+.event-page .brand-logo { filter: none; }
+.event-page .event-back { color: #5f6675; }
+.event-shell { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr) 430px; margin: 0 auto; max-width: 1180px; padding: 34px 28px 90px; }
+.event-summary-card, .event-detail-main, .event-ticket-panel { background: #fff; border: 1px solid #e5e8ee; border-radius: 20px; box-shadow: 0 8px 26px rgba(28,36,52,.07); }
+.event-summary-card { grid-column: 1; overflow: hidden; }
+.event-poster-frame { background: #eef0f4; min-height: 460px; }
+.event-hero-image { display: block; height: 100%; max-height: 560px; object-fit: cover; width: 100%; }
+.event-summary { padding: 26px 30px 24px; }
+.event-category, .ticket-panel-heading span { background: #f1e7fb; border-radius: 999px; color: #6500a1; display: inline-flex; font-size: .72rem; font-weight: 700; padding: 7px 12px; }
+.event-summary h1 { font-family: Outfit, sans-serif; font-size: clamp(2rem, 4vw, 3.8rem); letter-spacing: -.065em; line-height: 1; margin: 16px 0 26px; }
+.event-meta-grid { border-bottom: 1px solid #e8eaf0; border-top: 1px solid #e8eaf0; display: grid; gap: 24px; grid-template-columns: 1fr 1fr; padding: 19px 0; }
+.event-meta-grid small, .event-organizer span { color: #737b8b; display: block; font-size: .7rem; letter-spacing: .06em; margin-bottom: 7px; text-transform: uppercase; }
+.event-meta-grid strong, .event-organizer strong { display: block; font-size: .95rem; line-height: 1.4; }
+.event-organizer { padding: 17px 0 12px; }
+.event-share-row { align-items: center; display: flex; gap: 9px; }
+.event-share-row > span { color: #737b8b; font-size: .72rem; margin-right: 5px; text-transform: uppercase; }
+.event-share-row button { background: #f0f2f5; border: 0; border-radius: 7px; color: #303746; font-size: .78rem; padding: 9px 13px; }
+.event-ticket-panel { align-self: start; color: #171923; grid-column: 2; grid-row: 1 / span 2; padding: 0 22px 24px; position: sticky; top: 20px; }
+.ticket-panel-heading { align-items: center; border-bottom: 1px solid #e9ebef; display: flex; justify-content: space-between; margin: 0 -22px 20px; padding: 20px 22px; }
+.ticket-panel-heading h2 { font-size: 1.1rem; margin: 0; }
+.ticket-panel-heading span { font-size: .65rem; }
+.event-page .landing-ticket { background: #fff; border: 1px solid #dfe3ea; border-radius: 15px; color: #171923; display: block; margin: 12px 0; padding: 17px; width: 100%; }
+.event-page .landing-ticket > div:first-child { align-items: flex-start; display: flex; justify-content: space-between; }
+.event-page .landing-ticket small { color: #697184; display: block; font-size: .8rem; margin-top: 7px; }
+.ticket-purchase-row { align-items: center; display: flex; gap: 9px; margin-top: 16px; }
+.event-page .quantity-control { border: 1px solid #d7dce5; border-radius: 10px; display: flex; overflow: hidden; }
+.event-page .quantity-control button { background: #fff; border: 0; color: #303746; height: 40px; width: 36px; }
+.event-page .quantity-control strong { align-items: center; border-left: 1px solid #e1e4ea; border-right: 1px solid #e1e4ea; display: inline-flex; justify-content: center; min-width: 38px; }
+.ticket-add-button { background: #6900a4; border: 0; border-radius: 10px; color: #fff; flex: 1; font-weight: 700; height: 40px; }
+.ticket-selected-note { background: #faf4ff; border-radius: 9px; color: #626b7a; font-size: .78rem; margin: 18px 0; padding: 11px 13px; }
+.event-checkout-form { border-top: 1px solid #e9ebef; padding-top: 18px; }
+.event-page .landing-label { color: #3d4657; display: block; font-size: .76rem; margin: 14px 0 7px; }
+.event-page .phone-input { align-items: center; background: #fff; border: 1px solid #d7dce5; border-radius: 9px; display: flex; min-height: 44px; padding: 0 11px; }
+.event-page .phone-input span { color: #697184; font-size: .85rem; margin-right: 7px; }
+.event-page .phone-input input { background: transparent; border: 0; color: #171923; min-width: 0; outline: 0; padding: 11px 0; width: 100%; }
+.event-page .landing-total { align-items: center; border-top: 1px solid #e4e7ed; display: flex; justify-content: space-between; margin: 20px 0 4px; padding: 17px 0 2px; }
+.event-page .action-gold { background: #6900a4; color: #fff; width: 100%; }
+.event-page .secure-note { color: #7a8290; font-size: .72rem; text-align: center; }
+.event-detail-main { grid-column: 1; padding: 30px; }
+.event-detail-main h2 span { color: #6900a4; }
+.event-detail-main .event-description { color: #4f5868; font-size: 1rem; line-height: 1.7; }
+.event-gallery { display: grid; gap: 12px; grid-template-columns: repeat(2, 1fr); margin-top: 28px; }
+.event-faq { border-top: 1px solid #e5e8ee; margin-top: 30px; padding-top: 25px; }
+.event-faq h3 { margin-top: 0; }
+.event-faq details { border-bottom: 1px solid #e5e8ee; padding: 14px 0; }
+.event-faq p { color: #5f6877; line-height: 1.6; }
 
 @media (max-width: 720px) {
   .ticketia-app .marketplace-header { padding: 8px 18px; }
@@ -124,8 +155,13 @@
   .mobile-tabbar { align-items: center; background: rgba(24,24,27,.96); border-top: 1px solid #3f3f46; bottom: 0; display: flex; justify-content: space-around; left: 0; padding: 10px 8px calc(10px + env(safe-area-inset-bottom)); position: fixed; right: 0; z-index: 4; }
   .mobile-tabbar a { color: var(--muted); display: flex; flex-direction: column; font-size: .62rem; gap: 4px; align-items: center; }
   .mobile-tabbar span { color: var(--gold-soft); font-size: 1.15rem; line-height: 1; }
-  .event-page .event-detail-layout { display: block; padding: 50px 20px 70px; }
-  .event-page .event-ticket-panel { margin-top: 45px; position: static; }
-  .event-page .event-hero { min-height: 470px; }
-  .event-page .event-facts { grid-template-columns: 1fr; }
+  .event-shell { display: block; padding: 18px 14px 70px; }
+  .event-summary-card { border-radius: 14px; }
+  .event-poster-frame { min-height: 320px; }
+  .event-summary { padding: 21px 18px; }
+  .event-summary h1 { font-size: 2.3rem; }
+  .event-meta-grid { gap: 14px; grid-template-columns: 1fr; }
+  .event-ticket-panel { margin: 16px 0; position: static; }
+  .event-detail-main { padding: 24px 18px; }
+  .event-gallery { grid-template-columns: 1fr; }
 }
